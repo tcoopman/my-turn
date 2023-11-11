@@ -1,6 +1,8 @@
 defmodule MyTurn.Queue do
   use Agent
 
+  alias Phoenix.PubSub
+
   def start_link([]) do
     Agent.start_link(fn -> %{queue: []} end, name: __MODULE__)
   end
@@ -10,6 +12,9 @@ defmodule MyTurn.Queue do
       queue = [key | state.queue]
       %{state | queue: queue}
     end)
+
+    PubSub.broadcast(MyTurn.PubSub, "queue", :queue_updated)
+    :ok
   end
 
   def leave(key) do
@@ -22,6 +27,9 @@ defmodule MyTurn.Queue do
 
       %{state | queue: queue}
     end)
+
+    PubSub.broadcast(MyTurn.PubSub, "queue", :queue_updated)
+    :ok
   end
 
   def state(key) do

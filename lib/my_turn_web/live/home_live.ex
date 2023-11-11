@@ -2,6 +2,8 @@ defmodule MyTurnWeb.HomeLive do
   # In Phoenix v1.6+ apps, the line is typically: use MyAppWeb, :live_view
   use Phoenix.LiveView
 
+  alias Phoenix.PubSub
+
   def render(assigns) do
     ~H"""
     <div class="bg-gray-100 w-screen h-screen flex flex-col justify-between">
@@ -29,6 +31,7 @@ defmodule MyTurnWeb.HomeLive do
   def mount(_params, _session, socket) do
     if connected?(socket) do
       key = Uniq.UUID.uuid7()
+      PubSub.subscribe(MyTurn.PubSub, "queue")
 
       {:ok,
        assign(socket, %{
@@ -50,6 +53,12 @@ defmodule MyTurnWeb.HomeLive do
   def handle_event("leave", _params, socket) do
     key = socket.assigns.key
     :ok = MyTurn.Queue.leave(key)
+
+    {:noreply, assign(socket, :turn, turn(key))}
+  end
+
+  def handle_info(:queue_updated, socket) do
+    key = socket.assigns.key
 
     {:noreply, assign(socket, :turn, turn(key))}
   end
