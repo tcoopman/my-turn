@@ -7,9 +7,9 @@ defmodule MyTurnWeb.HomeLive do
   def render(assigns) do
     ~H"""
     <%= if !assigns[:key] do %>
-      <.welcome />
+    <.welcome />
     <% else %>
-      <.app turn={@turn} queue={@queue} />
+    <.app turn={@turn} queue={@queue} />
     <% end %>
     """
   end
@@ -23,14 +23,14 @@ defmodule MyTurnWeb.HomeLive do
         </span>
         <div>
           <ol>
-            <li :for={name <- @queue}><%= name %></li>
+            <li :for={{name, timestamp} <- @queue}><%= name %><%= waiting_time(DateTime.utc_now(), timestamp) %></li>
           </ol>
         </div>
       </div>
       <div class="h-40 flex gap-4 justify-center flex-shrink-0 items-center">
         <button
           class="rounded-full bg-sky-300 h-16 w-32 py-2 px-4 text-sm font-semibold text-slate-900 hover:bg-sky-200 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-300/50 active:bg-sky-500"
-          phx-click="join"
+          phx-click="queue"
         >
           Queue
         </button>
@@ -87,7 +87,8 @@ defmodule MyTurnWeb.HomeLive do
     if connected?(socket) do
       PubSub.subscribe(MyTurn.PubSub, "queue")
 
-      {:ok, assign(socket, turn: "not joined", queue: [])}
+      {:ok,
+      assign(socket, turn: "not joined", queue: [])}
     else
       {:ok, assign(socket, turn: "not connected", queue: [])}
     end
@@ -96,6 +97,13 @@ defmodule MyTurnWeb.HomeLive do
   def handle_event("join", %{"name" => name}, socket) do
     :ok = MyTurn.Queue.join(name)
     socket = assign(socket, key: name)
+
+    {:noreply, update_turn_state(socket)}
+  end
+
+  def handle_event("queue", _, socket) do
+    key = socket.assigns.key
+    :ok = MyTurn.Queue.join(key)
 
     {:noreply, update_turn_state(socket)}
   end
@@ -120,5 +128,9 @@ defmodule MyTurnWeb.HomeLive do
   defp update_turn_state(socket) do
     key = socket.assigns.key
     assign(socket, MyTurn.Queue.state(key))
+  end
+
+  defp waiting_time(now, joined_time) do
+    DateTime.diff(now, joined_time)
   end
 end

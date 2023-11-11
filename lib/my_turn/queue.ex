@@ -9,7 +9,7 @@ defmodule MyTurn.Queue do
 
   def join(key) do
     Agent.update(__MODULE__, fn state ->
-      queue = [key | state.queue]
+      queue = [{key, DateTime.utc_now()} | state.queue]
       %{state | queue: queue}
     end)
 
@@ -21,7 +21,7 @@ defmodule MyTurn.Queue do
     Agent.update(__MODULE__, fn state ->
       queue =
         Enum.reject(state.queue, fn
-          ^key -> true
+          {^key, _} -> true
           _ -> false
         end)
 
@@ -39,7 +39,7 @@ defmodule MyTurn.Queue do
       index =
         queue
         |> Enum.find_index(fn
-          ^key -> true
+          {^key, _} -> true
           _ -> false
         end)
 
