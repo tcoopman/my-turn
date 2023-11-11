@@ -9,7 +9,8 @@ import Config
 
 # Configures the endpoint
 config :my_turn, MyTurnWeb.Endpoint,
-  url: [host: "localhost"],
+  adapter: Bandit.PhoenixAdapter,
+  url: [host: "0.0.0.0"],
   render_errors: [
     formats: [html: MyTurnWeb.ErrorHTML, json: MyTurnWeb.ErrorJSON],
     layout: false
