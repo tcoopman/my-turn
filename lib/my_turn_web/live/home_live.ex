@@ -7,8 +7,15 @@ defmodule MyTurnWeb.HomeLive do
   def render(assigns) do
     ~H"""
     <div class="w-screen h-[100dvh] flex flex-col justify-between">
-      <div class="h-full flex-grow flex justify-center items-center">
-        Current turn: <%= @turn %>
+      <div class="h-full flex-grow flex flex-col gap-4 justify-center items-center">
+        <span class="inline-block">
+          Current turn: <%= @turn %>
+        </span>
+        <div>
+          <ol>
+            <li :for={name <- @queue}><%= name %></li>
+          </ol>
+        </div>
       </div>
       <div class="h-40 flex gap-4 justify-center flex-shrink-0 items-center">
         <button
@@ -35,11 +42,11 @@ defmodule MyTurnWeb.HomeLive do
 
       {:ok,
        assign(socket, %{
-         key: key,
-         turn: turn(key)
-       })}
+         key: key
+       })
+       |> update_turn_state}
     else
-      {:ok, assign(socket, :turn, "not connected")}
+      {:ok, assign(socket, turn: "not connected", queue: [])}
     end
   end
 
@@ -47,20 +54,18 @@ defmodule MyTurnWeb.HomeLive do
     key = socket.assigns.key
     :ok = MyTurn.Queue.join(key)
 
-    {:noreply, assign(socket, :turn, turn(key))}
+    {:noreply, update_turn_state(socket)}
   end
 
   def handle_event("leave", _params, socket) do
     key = socket.assigns.key
     :ok = MyTurn.Queue.leave(key)
 
-    {:noreply, assign(socket, :turn, turn(key))}
+    {:noreply, update_turn_state(socket)}
   end
 
   def handle_info(:queue_updated, socket) do
-    key = socket.assigns.key
-
-    {:noreply, assign(socket, :turn, turn(key))}
+    {:noreply, update_turn_state(socket)}
   end
 
   def terminate(_reson, socket) do
@@ -69,11 +74,8 @@ defmodule MyTurnWeb.HomeLive do
     :ok
   end
 
-  defp turn(key) do
-    with {:ok, turn} <- MyTurn.Queue.state(key) do
-      turn
-    else
-      _ -> "not joined"
-    end
+  defp update_turn_state(socket) do
+    key = socket.assigns.key
+    assign(socket, MyTurn.Queue.state(key))
   end
 end

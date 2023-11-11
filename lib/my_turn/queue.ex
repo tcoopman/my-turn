@@ -34,18 +34,25 @@ defmodule MyTurn.Queue do
 
   def state(key) do
     Agent.get(__MODULE__, fn %{queue: queue} ->
+      queue = Enum.reverse(queue)
+
       index =
         queue
-        |> Enum.reverse()
         |> Enum.find_index(fn
           ^key -> true
           _ -> false
         end)
 
-      case index do
-        nil -> {:error, :not_joined}
-        i -> {:ok, i + 1}
-      end
+      turn =
+        case index do
+          nil -> "not joined"
+          i -> "#{i + 1}"
+        end
+
+      %{
+        queue: queue,
+        turn: turn
+      }
     end)
   end
 end
