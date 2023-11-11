@@ -8,6 +8,7 @@ defmodule MyTurn.Application do
   @impl true
   def start(_type, _args) do
     children = [
+      {MyTurn.Queue, []},
       # Start the Telemetry supervisor
       MyTurnWeb.Telemetry,
       # Start the PubSub system

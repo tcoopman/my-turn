@@ -8,8 +8,7 @@ config :my_turn, MyTurnWeb.Endpoint,
   server: false
 
 # In test we don't send emails.
-config :my_turn, MyTurn.Mailer,
-  adapter: Swoosh.Adapters.Test
+config :my_turn, MyTurn.Mailer, adapter: Swoosh.Adapters.Test
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
